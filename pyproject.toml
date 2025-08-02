@@ -1,27 +1,29 @@
-[tool.poetry]
+[project]
 name = "fast-zero"
 version = "0.1.0"
 description = ""
-authors = ["Alan <alan.gomes.ag28@gmail.com>"]
+authors = [
+    {name = "Alan Gomes",email = "alan.gomes.ag28@gmail.com"}
+]
 readme = "README.md"
+requires-python = ">=3.13,<4.0"
+dependencies = [
+    "fastapi[standard] (>=0.116.1,<0.117.0)",
+    "pydantic-settings (>=2.10.1,<3.0.0)",
+    "sqlalchemy (>=2.0.41,<3.0.0)",
+    "alembic (>=1.16.4,<2.0.0)"
+]
 
-[tool.poetry.dependencies]
-python = "3.12.*"
-fastapi = "^0.111.0"
-sqlalchemy = "^2.0.31"
-pydantic-settings = "^2.3.4"
-alembic = "^1.13.2"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.4.9"
-pytest = "^8.2.2"
-pytest-cov = "^5.0.0"
-taskipy = "^1.12.2"
-ipython = "^8.26.0"
-
-[tool.pytest.ini_options]
-pythonpath = "."
-addopts = '-p no:warnings'
+pytest = "^8.4.1"
+pytest-cov = "^6.2.1"
+taskipy = "^1.14.1"
+ruff = "^0.12.5"
 
 [tool.ruff]
 line-length = 79
@@ -35,14 +37,15 @@ select = ['I', 'F', 'E', 'W', 'PL', 'PT']
 preview = true
 quote-style = 'single'
 
+[tool.pytest.ini_options]
+pythonpath = '.'
+addopts = '-p no:warnings'
+
 [tool.taskipy.tasks]
-lint = 'ruff check .; ruff check . --diff'
-format = 'ruff check . --fix; ruff format .'
+lint = 'ruff check'
+pre_format = 'ruff check --fix'
+format = 'ruff format'
 run = 'fastapi dev fast_zero/app.py'
 pre_test = 'task lint'
 test = 'pytest -s -x --cov=fast_zero -vv'
 post_test = 'coverage html'
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
