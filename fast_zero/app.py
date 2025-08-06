@@ -9,5 +9,5 @@ app.include_router(users.router)
 
 
 @app.get('/')
-def read_root() -> Message:
+async def read_root() -> Message:
     return {'message': 'Hello World'}

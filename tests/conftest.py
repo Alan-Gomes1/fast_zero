@@ -3,9 +3,10 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, event
-from sqlalchemy.orm import Session
+from sqlalchemy import event
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.pool import StaticPool
 
 from fast_zero.app import app
@@ -18,8 +19,8 @@ TZ_INFO = ZoneInfo('America/Sao_Paulo')
 PASSWORD = Settings().FAKE_PASSWORD
 
 
-@pytest.fixture
-def client(session):
+@pytest_asyncio.fixture
+async def client(session):
     """Cria um cliente de teste que utiliza uma sessão do banco de dados
     de teste. A sessão é passada como uma dependência para o app, permitindo
     que os testes interajam com o banco de dados em memória sem afetar o
@@ -54,8 +55,8 @@ def client(session):
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
-def session():
+@pytest_asyncio.fixture
+async def session():
     """Cria uma sessão de banco de dados para testes utilizando um banco
     de dados SQLite em memória. A sessão é criada com um pool estático para
     evitar problemas de concorrência em testes que podem ser executados em
@@ -64,21 +65,23 @@ def session():
     Yields:
         Session: Sessão do banco de dados para testes.
     """
-    engine = create_engine(
-        'sqlite:///:memory:',
+    engine = create_async_engine(
+        'sqlite+aiosqlite:///:memory:',
         connect_args={'check_same_thread': False},
         poolclass=StaticPool
     )
-    table_registry.metadata.create_all(engine)
+    async with engine.begin() as conn:
+        await conn.run_sync(table_registry.metadata.create_all)
 
-    with Session(engine) as session:
+    async with AsyncSession(engine, expire_on_commit=False) as session:
         yield session
 
-    table_registry.metadata.drop_all(engine)
+    async with engine.begin() as conn:
+        await conn.run_sync(table_registry.metadata.drop_all)
 
 
-@pytest.fixture
-def user(session):
+@pytest_asyncio.fixture
+async def user(session):
     """Cria um usuário de teste no banco de dados.
 
     Args:
@@ -90,8 +93,8 @@ def user(session):
     password = get_password_hash(PASSWORD)
     user = User(username='Jhon', email='jhon@email.com', password=password)
     session.add(user)
-    session.commit()
-    session.refresh(user)
+    await session.commit()
+    await session.refresh(user)
     return user
 
 
