@@ -11,12 +11,31 @@ from sqlalchemy.pool import StaticPool
 
 from fast_zero.app import app
 from fast_zero.database import get_session
-from fast_zero.models import User, table_registry
+from fast_zero.models import table_registry
 from fast_zero.security import get_password_hash
 from fast_zero.settings import Settings
 
+from .factories import UserFactory
+
 TZ_INFO = ZoneInfo('America/Sao_Paulo')
 PASSWORD = Settings().FAKE_PASSWORD
+
+
+async def create_user(session) -> UserFactory:
+    """Cria um usuário de teste no banco de dados.
+
+    Args:
+        session (Session): Sessão do banco de dados para testes.
+
+    Returns:
+        UserFactory: Usuário de teste criado.
+    """
+    password = get_password_hash(PASSWORD)
+    user = UserFactory(password=password)
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return user
 
 
 @pytest_asyncio.fixture
@@ -87,15 +106,25 @@ async def user(session):
     Args:
         session (Session): Sessão do banco de dados para testes.
 
-    Yields:
+    Returns:
         User: Usuário de teste criado.
     """
-    password = get_password_hash(PASSWORD)
-    user = User(username='Jhon', email='jhon@email.com', password=password)
-    session.add(user)
-    await session.commit()
-    await session.refresh(user)
+    user = await create_user(session)
     return user
+
+
+@pytest_asyncio.fixture
+async def another_user(session):
+    """Cria um usuário de teste no banco de dados.
+
+    Args:
+        session (Session): Sessão do banco de dados para testes.
+
+    Returns:
+        User: Usuário de teste criado.
+    """
+    another_user = await create_user(session)
+    return another_user
 
 
 @contextmanager
