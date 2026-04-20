@@ -52,3 +52,9 @@ class FilterPage(BaseModel):
     order: str | None = Field(
         default=None, description='Order of sorting (asc/desc)'
     )
+
+
+class FilterTodo(FilterPage):
+    title: str | None = Field(None, min_length=3, max_length=20)
+    description: str | None = Field(None, min_length=3, max_length=20)
+    state: TodoState | None = None
