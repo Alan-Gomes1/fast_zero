@@ -47,7 +47,9 @@ async def test_list_todos_shold_return_5_todos(session, client, user, token):
 
 
 @pytest.mark.asyncio
-async def test_list_todos_should_return_2_todos(session, client, user, token):
+async def test_list_todos_pagination_should_return_2_todos(
+    session, client, user, token
+):
     expected_todos = 2
     session.add_all(TodoFactory.create_batch(5, user_id=user.id))
     await session.commit()
