@@ -110,3 +110,37 @@ async def test_list_todos_filter_by_state(session, client, user, token):
     )
 
     assert len(response.json()['todos']) == expected_todos
+
+
+@pytest.mark.asyncio
+async def test_list_todos_filter_combined_should_return_5_todos(
+    session, client, user, token
+):
+    expected_todos = 5
+    session.add_all(
+        TodoFactory.create_batch(
+            5,
+            user_id=user.id,
+            title='Teste todo',
+            description='Teste description',
+            state=TodoState.done,
+        )
+    )
+
+    session.add_all(
+        TodoFactory.create_batch(
+            3,
+            user_id=user.id,
+            title='Other title',
+            description='Other description',
+            state=TodoState.todo,
+        )
+    )
+    await session.commit()
+
+    response = client.get(
+        '/todos/?title=Teste todo&description=Teste&state=done',
+        headers={'Authorization': token},
+    )
+
+    assert len(response.json()['todos']) == expected_todos
