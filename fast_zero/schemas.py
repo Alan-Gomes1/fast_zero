@@ -43,6 +43,12 @@ class TodoList(BaseModel):
     todos: list[TodoPublic]
 
 
+class TodoUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    state: TodoState | None = None
+
+
 class FilterPage(BaseModel):
     skip: int = Field(default=0, ge=0, description='Number of items to skip')
     limit: int = Field(
